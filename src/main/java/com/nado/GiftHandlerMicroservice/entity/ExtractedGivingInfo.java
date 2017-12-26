@@ -21,4 +21,8 @@ public class ExtractedGivingInfo {
 			return false;
 		}
 	}
+	@Override
+	public int hashCode(){
+		return (messageId+timestamp).hashCode();
+	}
 }
