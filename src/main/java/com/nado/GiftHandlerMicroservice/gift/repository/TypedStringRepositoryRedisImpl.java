@@ -30,7 +30,9 @@ public class TypedStringRepositoryRedisImpl implements TypedStringRepository {
 	private int counter = 0;
 	private int olderCounter = 0;
 	private Lock lock = new ReentrantLock();
-
+	private static final int MAXMUM_INDEX_FOR_EACH_TYPE = 99;
+	
+	
 	@PostConstruct
 	public void init() {
 		setOperations = stringRedisTemplate.opsForSet();
@@ -58,7 +60,9 @@ public class TypedStringRepositoryRedisImpl implements TypedStringRepository {
 		// add to typeSet
 		setOperations.add(typeSet, type);
 		// add to list
-		listOperations.leftPush(messageListKey(type), message);
+		String key = messageListKey(type);
+		listOperations.leftPush(key, message);
+		listOperations.trim(key, 0, MAXMUM_INDEX_FOR_EACH_TYPE);
 	}
 
 	@Override

@@ -112,6 +112,8 @@ public class GiftRepositoryRedisImpl implements GiftRepository {
 		addData("999",	20000, "超级火箭", "gold", "red");
 		addData("1340",	0, "一张选票", "", "");
 		addData("1327",	0, "平安果", "", "");
+		addData("1331",	0, "瑞雪兆丰年", "", "");
+		
 		for(GiftInfo giftInfo:data){
 			initialData.add(new Gift(giftInfo.getGid(), GivingRelatedMessageTypes.dgb, giftInfo.getName(), giftInfo.getPrice()));
 		}
