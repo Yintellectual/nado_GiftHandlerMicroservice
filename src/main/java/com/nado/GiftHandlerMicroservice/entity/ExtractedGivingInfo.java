@@ -2,12 +2,18 @@ package com.nado.GiftHandlerMicroservice.entity;
 
 import java.time.LocalDateTime;
 
+import com.nado.GiftHandlerMicroservice.gift.entity.Gift;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class ExtractedGivingInfo {
 	private String uid;
-	private Integer price;
+	private Gift gift;
 	private Long timestamp;
 	private String messageId;
 	

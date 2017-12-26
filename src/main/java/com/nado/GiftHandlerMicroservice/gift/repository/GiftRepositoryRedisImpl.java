@@ -110,6 +110,8 @@ public class GiftRepositoryRedisImpl implements GiftRepository {
 		addData("989",	2, "猫耳", "", "");
 		addData("997",	20000, "大头火箭", "gold", "red");
 		addData("999",	20000, "超级火箭", "gold", "red");
+		addData("1340",	0, "一张选票", "", "");
+		addData("1327",	0, "平安果", "", "");
 		for(GiftInfo giftInfo:data){
 			initialData.add(new Gift(giftInfo.getGid(), GivingRelatedMessageTypes.dgb, giftInfo.getName(), giftInfo.getPrice()));
 		}
@@ -133,6 +135,7 @@ public class GiftRepositoryRedisImpl implements GiftRepository {
 		initialData.forEach(g->{
 			String giftKey = giftKey(g);
 			if(!setOperations.isMember(giftSetKey, giftKey)){
+				System.out.println("\n\n\n!!!!!!!!!!!!!!!!!!!"+giftKey+"!!!!!!!!!!!!!!!!!!\n\n\n\n");
 				save(g);
 			}
 		});

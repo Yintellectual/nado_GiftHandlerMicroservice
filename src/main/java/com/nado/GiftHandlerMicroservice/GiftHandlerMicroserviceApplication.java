@@ -8,6 +8,7 @@ import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -25,6 +26,9 @@ import org.springframework.web.client.RestTemplate;
 
 import com.nado.GiftHandlerMicroservice.entity.ExtractedGivingInfo;
 import com.nado.GiftHandlerMicroservice.enums.GivingRelatedMessageTypes;
+import com.nado.GiftHandlerMicroservice.gift.repository.TypedStringRepository;
+import com.nado.GiftHandlerMicroservice.gift.service.GiftDictionary;
+import com.nado.douyuConnectorMicroservice.util.CommonUtil;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -36,7 +40,7 @@ import com.rabbitmq.client.Envelope;
 @SpringBootApplication
 @EnableScheduling
 @EnableAutoConfiguration
-@ComponentScan(basePackages={"com.nado.douyuConnectorMicroservice.douyuClient", "com.nado.GiftHandlerMicroservice"})
+@ComponentScan(basePackages = { "com.nado.douyuConnectorMicroservice.douyuClient", "com.nado.GiftHandlerMicroservice" })
 public class GiftHandlerMicroserviceApplication {
 
 	private static final Logger logger = LoggerFactory.getLogger(GiftHandlerMicroserviceApplication.class);
@@ -44,6 +48,11 @@ public class GiftHandlerMicroserviceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(GiftHandlerMicroserviceApplication.class, args);
 	}
+
+	@Autowired
+	private GiftDictionary dictionary;
+	@Autowired
+	private TypedStringRepository unknownGiftRepository;
 
 	@Bean
 	public TaskScheduler taskScheduler() {
@@ -56,20 +65,21 @@ public class GiftHandlerMicroserviceApplication {
 		return new SimpleAsyncTaskExecutor();
 	}
 
-    @Bean
-    public RestTemplate getRestClient() {
-        RestTemplate restClient = new RestTemplate(
-                new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
+	@Bean
+	public RestTemplate getRestClient() {
+		RestTemplate restClient = new RestTemplate(
+				new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
 
-        // Add one interceptor like in your example, except using anonymous class.
-        restClient.setInterceptors(Collections.singletonList((request, body, execution) -> {
-            logger.debug("Intercepting...");
-            return execution.execute(request, body);
-        }));
+		// Add one interceptor like in your example, except using anonymous
+		// class.
+		restClient.setInterceptors(Collections.singletonList((request, body, execution) -> {
+			logger.debug("Intercepting...");
+			return execution.execute(request, body);
+		}));
 
-        return restClient;
-    }
-	
+		return restClient;
+	}
+
 	@Bean
 	public Channel channel() throws Exception {
 		ConnectionFactory factory = new ConnectionFactory();
@@ -84,24 +94,42 @@ public class GiftHandlerMicroserviceApplication {
 				@Override
 				public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties,
 						byte[] body) {
-					String message = "";
 					try {
-						message = new String(body, "UTF-8");
-					} catch (UnsupportedEncodingException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					try {
+						String message = "";
+						ExtractedGivingInfo extractedUserInfo = null;
+						try {
+							message = new String(body, "UTF-8");
+						} catch (UnsupportedEncodingException e) {
+							// TODO Auto-generated catch block
+							logger.error(e.getMessage());
+						}
+						if(message ==null || message.isEmpty()){
+							logger.error(message);
+						}else{
+							if(type.equals(GivingRelatedMessageTypes.anbc)||type.equals(GivingRelatedMessageTypes.renewbc)){
+								if(!"2020877".equals(CommonUtil.matchStringValue(message, "drid"))){
+									
+								}else{
+									extractedUserInfo = type.extractGivingInfo(message, dictionary,unknownGiftRepository);
+								}
+							}else{
+								extractedUserInfo = type.extractGivingInfo(message, dictionary,unknownGiftRepository);
+							}
+						}
 						LocalDateTime now = LocalDateTime.now();
-						ExtractedGivingInfo extractedUserInfo = type.extractGivingInfo(message);
+						
+						if(extractedUserInfo!=null){
+							
+						}
 						// use the repositories here
-
+					} catch (Exception e) {
+						logger.error(e.getMessage());
 					} finally {
 						try {
 							channel.basicAck(envelope.getDeliveryTag(), false);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
+							logger.error(e.getMessage());
 						}
 					}
 				}

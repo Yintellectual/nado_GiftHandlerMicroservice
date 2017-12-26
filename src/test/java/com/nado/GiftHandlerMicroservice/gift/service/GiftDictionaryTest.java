@@ -9,19 +9,25 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import com.nado.GiftHandlerMicroservice.enums.GivingRelatedMessageTypes;
 import com.nado.GiftHandlerMicroservice.gift.entity.Gift;
 import com.nado.GiftHandlerMicroservice.gift.repository.GiftRepository;
+import com.nado.GiftHandlerMicroservice.gift.repository.GiftRepositoryRedisImpl;
+import com.nado.douyuConnectorMicroservice.douyuClient.DouyuApiClient;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ComponentScan(basePackages={"com.nado.douyuConnectorMicroservice.douyuClient", "com.nado.GiftHandlerMicroservice"})
 public class GiftDictionaryTest {
 	
 	@Autowired
-	private GiftRepository giftRepository;
+	private GiftRepositoryRedisImpl giftRepository;
+	@Autowired
+	private DouyuApiClient douyuApiClient;
 	private GiftDictionary dictionary;
 	private GiftDictionary dictionary2;
 	Gift dgb1203;
@@ -32,6 +38,7 @@ public class GiftDictionaryTest {
 	public void saveSampleGifts() {
 		dictionary = new GiftDictionaryNaiveImpl();
 		setField(dictionary, "giftRepository", giftRepository);
+		setField(dictionary, "douyuApiClient", douyuApiClient);
 		//addData("1203",	60l, "年度办卡", "white", "gray");
 		//addData("1204",	1000l, "盛典飞机", "gray", "gold");
 		//addData("1205",	5000l, "盛典火箭", "gold", "black");
@@ -48,6 +55,7 @@ public class GiftDictionaryTest {
 		dictionary.save(dgb1205);
 		dictionary2 = new GiftDictionaryNaiveImpl();
 		setField(dictionary2, "giftRepository", giftRepository);
+		setField(dictionary2, "douyuApiClient", douyuApiClient);
 		((GiftDictionaryNaiveImpl)dictionary2).init();
 	}
 	@After
@@ -75,7 +83,7 @@ public class GiftDictionaryTest {
 	public void savedGiftsLoaded_bc_buy_deserve1(){
 		assertTrue(bc_buy_deserve1.equals(dictionary2.get("1", GivingRelatedMessageTypes.bc_buy_deserve)));
 	}
-	@Test(timeout=4000)
+	@Test
 	public void threadSafe() throws InterruptedException{
 		Thread t1 = new Thread(new QueryGift(dictionary2));
 		Thread t2 = new Thread(new QueryGift(dictionary2));
