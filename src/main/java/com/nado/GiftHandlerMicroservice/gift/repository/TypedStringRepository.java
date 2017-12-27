@@ -14,4 +14,6 @@ public interface TypedStringRepository {
 	Map<String, List<String>> detailsByType(String... types);
 
 	void clear();
+	
+	void flush();
 }

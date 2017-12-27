@@ -119,9 +119,9 @@ public class GiftHandlerMicroserviceApplication {
 						LocalDateTime now = LocalDateTime.now();
 						
 						if(extractedUserInfo!=null){
-							
+							// use the repositories here
 						}
-						// use the repositories here
+						
 					} catch (Exception e) {
 						logger.error(e.getMessage());
 					} finally {

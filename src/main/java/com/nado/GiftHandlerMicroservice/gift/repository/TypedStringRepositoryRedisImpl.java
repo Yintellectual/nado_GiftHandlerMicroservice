@@ -1,5 +1,6 @@
 package com.nado.GiftHandlerMicroservice.gift.repository;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -11,6 +12,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
@@ -18,12 +21,19 @@ import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.nado.GiftHandlerMicroservice.GiftHandlerMicroserviceApplication;
 import com.nado.GiftHandlerMicroservice.enums.GivingRelatedMessageTypes;
+import com.nado.douyuConnectorMicroservice.util.CommonUtil;
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Channel;
 
 @Service
 public class TypedStringRepositoryRedisImpl implements TypedStringRepository {
+	private static final Logger logger = LoggerFactory.getLogger(GiftHandlerMicroserviceApplication.class);
 	@Autowired
 	private StringRedisTemplate stringRedisTemplate;
+	@Autowired
+	private Channel channel;
 	private SetOperations<String, String> setOperations;
 	private HashOperations<String, String, String> hashOperations;
 	private ListOperations<String, String> listOperations;
@@ -38,6 +48,12 @@ public class TypedStringRepositoryRedisImpl implements TypedStringRepository {
 		setOperations = stringRedisTemplate.opsForSet();
 		hashOperations = stringRedisTemplate.opsForHash();
 		listOperations = stringRedisTemplate.opsForList();
+		try {
+			channel.exchangeDeclare("douyu-cooked-messages", BuiltinExchangeType.TOPIC);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			logger.error(e.getMessage());
+		}
 	}
 
 	String typeSet = "nado:unknownGift:types";
@@ -102,6 +118,31 @@ public class TypedStringRepositoryRedisImpl implements TypedStringRepository {
 			result.put(type, messages);
 		});
 		return result;
+	}
+	
+	public void flush(){
+		Set<String> types = setOperations.members(typeSet);
+		if(types != null){
+			types.forEach(type->{
+				String listKey = messageListKey(type);
+				Long size = listOperations.size(listKey);
+				String message = null;
+				for(int i=0;i<size;i++){
+					message = listOperations.rightPop(listKey);
+					if(message != null){
+						try {
+							channel.basicPublish("douyu-cooked-messages", CommonUtil.matchStringValue(message, "type"), null, message.getBytes());
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							logger.error(e.getMessage());
+						}
+					}
+				}
+				if(listOperations.size(listKey)==0){
+					setOperations.remove(typeSet, type);
+				}
+			});
+		}
 	}
 
 	@Override

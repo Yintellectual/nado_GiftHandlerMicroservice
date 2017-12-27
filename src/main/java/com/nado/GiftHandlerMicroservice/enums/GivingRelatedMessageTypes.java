@@ -77,13 +77,14 @@ public enum GivingRelatedMessageTypes {
 	public ExtractedGivingInfo extractedGivingInfo(String code_field, String uid_field, String message, GiftDictionary dictionary, TypedStringRepository unknownGiftRepository){
 		// "/timestamp@=1514289387016/messageId@=148937/type@=bc_buy_deserve/level@=30/lev@=3/rid@=2020877/gid@=0/cnt@=1/hits@=1/sid@=6618417/sui@=id@A=6618417@Sname@A=@Snick@A=斜揽殘箫@Sicon@A=avanew@ASface@AS201712@AS13@AS19@AS2504aa11dd52ba2ebf6b995824565098@Srg@A=1@Spg@A=1@Srt@A=0@Sbg@A=0@Sweight@A=0@Scps_id@A=0@Sps@A=0@Ses@A=0@Sver@A=0@Sglobal_ban_lev@A=0@Sexp@A=0@Slevel@A=30@Scurr_exp@A=0@Sup_need@A=0@Sgt@A=0@Sit@A=0@Sits@A=0@Scm@A=0@Srni@A=0@Shcre@A=0@Screi@A=0@Sel@A=@Shfr@A=32609@Sfs@A=0@S/sahf@=0/bnn@=/bl@=0/brid@=0/hc@=/"
 		String code = matchDigitalValue(message, code_field);
-		System.out.println(this+":code:"+code);
 		Gift gift = dictionary.get(code, this);
 		if(gift==null){
 			//unknown gift handler
+			System.out.println("Unkown:"+this+":code:"+code);
 			unknownGiftRepository.save(message, this+"-"+code);
 			return null;
 		}else{
+			System.out.println(this+":code:"+code);
 			return new ExtractedGivingInfo(matchDigitalValue(message, uid_field), gift, new Long(matchDigitalValue(message, "timestamp")), matchDigitalValue(message, "messageId"));
 		}
 	}

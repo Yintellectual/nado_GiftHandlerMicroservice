@@ -43,6 +43,11 @@ public class DebugController {
 	public Set<String>unknownGiftSummary(){
 		return unknownGiftRepository.summary();
 	}
+	@RequestMapping("/api/debug/unknownGift/flush")
+	@ResponseBody
+	public void unknownGiftFlush(){
+		unknownGiftRepository.flush();
+	}
 	@RequestMapping("/api/debug/unknownGift/details")
 	@ResponseBody
 	public Map<String, List<String>>unknownGiftSummary(String... types){
