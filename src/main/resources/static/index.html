@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+
+<head>
+<title>Gift Editor</title>
+<link rel="stylesheet"
+	href='https://cdn.jsdelivr.net/brutusin.json-forms/1.3.2/css/brutusin-json-forms.min.css' />
+<link rel="stylesheet"
+	href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css' />
+<script src="https://code.jquery.com/jquery-1.12.2.min.js"></script>
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script
+	src="https://cdn.jsdelivr.net/brutusin.json-forms/1.3.2/js/brutusin-json-forms.min.js"></script>
+<script
+	src="https://cdn.jsdelivr.net/brutusin.json-forms/1.3.2/js/brutusin-json-forms-bootstrap.min.js"></script>
+
+</head>
+
+<body>
+	<div id="container"></div>
+	<hr>
+
+	&nbsp;
+	<button class="btn btn-primary" id="updateGiftBtn">getData()</button>
+	&nbsp;
+	<button class="btn btn-primary"
+		onclick="if (bf.validate()) {alert('Validation succeeded')}">validate()</button>
+
+
+	<script>
+		var bf = brutusin["json-forms"]
+				.create({
+					"$schema" : "http://json-schema.org/draft-03/schema#",
+					"type" : "object",
+					"properties" : {
+						"code" : {
+							"type" : "string",
+							"title" : "code",
+							"description" : "A string input"
+						},
+						"type" : {
+							"type" : "string",
+							"title" : "type",
+							"description" : "A string input"
+						},
+						"name" : {
+							"type" : "string",
+							"title" : "name",
+							"description" : "A string input"
+						},
+						"price" : {
+							"type" : "string",
+							"title" : "price",
+							"description" : "A string input"
+						},
+// 						"num1" : {
+// 							"type" : "integer",
+// 							"title" : "A number",
+// 							"minimum" : 1,
+// 							"maximum" : 10,
+// 							"multipleOf" : 3,
+// 							"description" : "An integer multiple of `3`, between `1` and `10` (inclusive)"
+// 						},
+					// 													"array1" : {
+					// 														"type" : "array",
+					// 														"title" : "An array values",
+					// 														"items" : {
+					// 															"type" : "object",
+					// 															"properties" : {
+					// 																"value" : {
+					// 																	"type" : "string",
+					// 																	"title" : "Value"
+					// 																}
+					// 															}
+					// 														}
+					// 													}
+					}
+				});
+		var container = document.getElementById('container');
+		bf.render(container);
+		document.getElementById('updateGiftBtn').addEventListener('click',
+				function() {
+					$.ajax({
+						url : "/api/gift/save?code="+bf.getData().code+"&type="+bf.getData().type+"&name="+bf.getData().name+"&price="+bf.getData().price,
+					}).then(function(data) {
+						alert(JSON.stringify(data, null, 4));
+						
+					});
+				});
+	</script>
+</body>
+
+</html>
